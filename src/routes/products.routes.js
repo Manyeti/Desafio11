@@ -1,28 +1,44 @@
 import { Router } from 'express'
-import { ProductManager } from '../controllers/ProductManager.js'
+import productModel from '../models/products.models.js';
 
-const productManager = new ProductManager('src/models/productos.txt')
 
 const routerProd = Router()
 
 routerProd.get('/', async (req, res) => {
-    const { limit } = req.query
+	const { limit, page, sort, category, status } = req.query;
+	let sortOption;
+	sort == 'asc' && (sortOption = 'price');
+	sort == 'desc' && (sortOption = '-price');
 
-    const prods = await productManager.getProducts()
-    const products = prods.slice(0, limit)
-    res.status(200).send(products)
+	const options = {
+		limit: limit || 10,
+		page: page || 1,
+		sort: sortOption || null,
+	};
 
-})
+	const query = {};
+	category && (query.category = category);
+	status && (query.status = status);
 
-routerProd.get('/:id', async (req, res) => {
-    const { id } = req.params
-    const prod = await productManager.getProductById(parseInt(id))
+	try {
+		const prods = await productModel.paginate(query, options);
+		res.status(200).send({ resultado: 'OK', message: prods });
+	} catch (error) {
+		res.status(400).send({ error: `Error al consultar productos: ${error}` });
+	}
+});
 
-    if (prod)
-        res.status(200).send(prod)
-    else
-        res.status(404).send("Producto no existente")
-})
+routerProd.get('/:pid', async (req, res) => {
+	const { pid } = req.params;
+	try {
+		const prod = await productModel.findById(pid);
+		prod
+			? res.status(200).send({ resultado: 'OK', message: prod })
+			: res.status(404).send({ resultado: 'No Encontrado', message: prod });
+	} catch (error) {
+		res.status(400).send({ error: `Error al consultar producto: ${error}` });
+	}
+});
 
 routerProd.post('/', async (req, res) => {
 	const { title, description, stock, code, price, category } = req.body;
@@ -56,7 +72,7 @@ routerProd.put('/:pid', async (req, res) => {
 		});
 		prod
 			? res.status(200).send({ resultado: 'OK', message: prod })
-			: res.status(404).send({ resultado: 'Not Found', message: prod });
+			: res.status(404).send({ resultado: 'No Encontrado', message: prod });
 	} catch (error) {
 		res.status(400).send({ error: `Error al actualizar producto: ${error}` });
 	}
@@ -75,3 +91,14 @@ routerProd.delete('/:pid', async (req, res) => {
 });
 
 export default routerProd
+
+/* 
+GET
+http://localhost:4000/api/products/
+Lista productos con Limite y muestra la información solicitada sobre las paginas 
+
+http://localhost:4000/api/products?limit=4
+http://localhost:4000/api/products?limit=4&sort='desc'
+http://localhost:4000/api/products?limit=4&page=2&sort='desc'
+
+*/

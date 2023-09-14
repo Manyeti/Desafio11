@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from 'express'
 //import multer from 'multer'
 import { Server } from 'socket.io'
@@ -12,10 +13,11 @@ import mongoose from 'mongoose';
 import { __dirname } from './path.js'
 import path from 'path'
 import { ProductManager } from './controllers/ProductManager.js';
+import cartModel from './models/carts.models.js'
 
 const PORT = 4000
 const app = express()
-const productManager = new ProductManager('./src/models/productos.txt');
+
 
 //Server
 const server = app.listen(PORT, () => {
@@ -44,8 +46,11 @@ app.set('views', path.resolve(__dirname, './views')) // ver si va el punto
 //const mensajes = []
 
 //conexion BD
-mongoose.connect('mongodb+srv://sergio:coderhouse@cluster0.lkgkcby.mongodb.net/?retryWrites=true&w=majority')
-    .then(() => console.log("DB Conectada"))
+mongoose.connect(process.env.MONGO_URL)
+    .then(async() => {
+        console.log("DB Conectada")
+        //await cartModel.create({})
+    })
     .catch((error) => console.log("Error en conexión a MongoDB Atlas", error))
 
 
@@ -59,14 +64,61 @@ io.on("connection", (socket) => {
     })
 
     socket.on('load', async () => {
-		const products = await productManager.getProducts();
-		socket.emit('products', products);
+		const data = await productModel.paginate({}, { limit: 7 });
+		console.log(data);
+		socket.emit('products', data);
 	});
 
-	socket.on('newProduct', async product => {
+	socket.on('previousPage', async page => {
+		const data = await productModel.paginate({}, { limit: 6, page: page });
+		socket.emit('products', data);
+	});
+
+	socket.on('nextPage', async page => {
+		const data = await productModel.paginate({}, { limit: 4, page: page });
+		socket.emit('products', data);
+	});
+
+	/* socket.on('newProduct', async product => {
 		await productManager.addProduct(product);
 		const products = await productManager.getProducts();
 		socket.emit('products', products);
+	}); */
+
+    socket.on('newProduct', async product => {
+		await productModel.create(product);
+		const products = await productModel.find();
+
+		socket.emit('products', products);
+	});
+
+    socket.on('mensaje', async info => {
+		const { email, message } = info;
+		await messageModel.create({
+			email,
+			message,
+		});
+		const messages = await messageModel.find();
+
+		socket.emit('mensajes', messages);
+	});
+
+    socket.on('addProduct', async data => {
+		const { pid, cartId } = data;
+		if (cartId) {
+			const cart = await cartModel.findById(cartId);
+			const productExists = cart.products.find(prod => prod.id_prod == pid);
+			productExists
+				? productExists.quantity++
+				: cart.products.push({ id_prod: pid, quantity: 1 });
+			await cart.save();
+			socket.emit('success', cartId);
+		} else {
+			const cart = await cartModel.create({});
+			cart.products.push({ id_prod: pid, quantity: 1 });
+			await cart.save();
+			socket.emit('success', cart._id.toString());
+		}
 	});
 
     /* socket.on('mensaje', info => {
@@ -127,6 +179,13 @@ app.get('/static/realtimeproducts', (req, res) => {
 	});
 });
 
+app.get('/static/carts/:cid', (req, res) => {
+	res.render('carts', {
+		rutaCSS: 'carts',
+		rutaJS: 'carts',
+	});
+});
+
 
 app.use('/api/carts', routerCarts)
 app.use('/api/products', routerProd);
@@ -144,3 +203,7 @@ console.log(path.join(__dirname, '/public'))
 app.listen(PORT, () => {
     console.log(`Server on port ${PORT}`)    ///antes de socket.io
 }) */
+
+
+
+
