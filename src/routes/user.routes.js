@@ -1,12 +1,19 @@
 import { Router } from "express";
-import { userModel } from '../models/user.models.js'
+import userModel from '../models/user.models.js'
 import { createHash } from "../utils/bcrypt.js";
 import passport from "passport";
+import usersController from '../controllers/user.controller.js';
 
-const userRouter = Router({caseSensitive: false});
+//const userRouter = Router({caseSensitive: false});
+const userRouter = Router()
+
+userRouter.post('/', passport.authenticate('register'), usersController.postUser);
+
+userRouter.get('/', usersController.getUser);
+
 
 // Get users
-userRouter.get('/', async (req, res) => {
+/* userRouter.get('/', async (req, res) => {
 	try {
 		const users = await userModel.find()
 
@@ -18,7 +25,7 @@ userRouter.get('/', async (req, res) => {
 	} catch (error) {
 		res.status(500).send({Error: `Internal server error: ${error}`})
 	}
-})
+}) */
 
 
 /*
@@ -39,7 +46,7 @@ const { first_name, last_name, email, password, age } = req.body
     }
 
 */
-userRouter.post('/', passport.authenticate('register'), async (req, res) => {
+/* userRouter.post('/', passport.authenticate('register'), async (req, res) => {
     try {
         if (!req.user) {
             return res.status(400).send({ mensaje: 'Usuario ya existente' })
@@ -48,6 +55,6 @@ userRouter.post('/', passport.authenticate('register'), async (req, res) => {
     } catch (error) {
         res.status(500).send({ mensaje: `Error al crear usuario ${error}` })
     }
-})
+}) */
 
 export default userRouter

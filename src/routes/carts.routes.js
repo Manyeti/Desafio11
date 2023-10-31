@@ -1,11 +1,26 @@
 import { Router } from 'express';
 import cartModel from '../models/carts.models.js';
+import cartsController from '../controllers/cart.controller.js';
 import productModel from '../models/products.models.js';
+import { authorization, passportError } from '../utils/messageErrors.js';
 
 const routerCarts = Router();
 
 
-routerCarts.get('/', async (req, res) => {
+
+
+
+routerCarts.get('/', cartsController.getCarts);
+routerCarts.get('/:cid', cartsController.getCart);
+routerCarts.post('/', cartsController.postCart);
+routerCarts.post('/:cid/purchase', cartsController.purchaseCart);
+routerCarts.put('/:cid/product/:pid', passportError('jwt'), authorization('user'),cartsController.putProductCart);
+routerCarts.put('/:cid/products/:pid', passportError('jwt'), authorization('user'),cartsController.putQuantityCart);
+routerCarts.put('/:cid', passportError('jwt'), authorization('user'),cartsController.putProductsCart);
+routerCarts.delete('/:cid', passportError('jwt'), authorization('user'),cartsController.deleteCart);
+routerCarts.delete('/:cid/products/:pid', passportError('jwt'), authorization('user'),cartsController.deleteProductCart);
+
+/* routerCarts.get('/', async (req, res) => {
 	const { limit } = req.query;
 	try {
 		const carts = await cartModel.find().limit(limit);
@@ -149,7 +164,7 @@ routerCarts.delete('/:cid/products/:pid', async (req, res) => {
 	} catch (error) {
 		res.status(400).send({ error: `Error al eliminar producto: ${error}` });
 	}
-});
+}); */
 
 export default routerCarts;
 

@@ -1,4 +1,5 @@
 import {Schema, model} from 'mongoose';
+import cartModel from './carts.models.js'
 
 const userSchema = new Schema ({
     first_name: {
@@ -27,11 +28,26 @@ const userSchema = new Schema ({
         type: String,
         required: true,
         unique: true
+    },
+    cart: {
+        type: Schema.Types.ObjectId,
+        ref: 'carts'
     }
 })
 
-/* const userModel = model('user', userSchema);
 
-export default userModel; */
+userSchema.pre('save', async function (next) {
 
-export const userModel = model('users', userSchema) // efino modelo con nombre
+    try {
+        const newCart = await cartModel.create({})
+        this.cart = newCart._id
+    } catch (error) {
+        next(error)
+    }
+
+})
+const userModel = model('user', userSchema);
+
+export default userModel;
+
+//export const userModel = model('users', userSchema) // efino modelo con nombre

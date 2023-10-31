@@ -1,8 +1,9 @@
 import 'dotenv/config'
 import express from 'express'
 //import multer from 'multer'
+import router from './routes/index.routes.js'
 import { Server } from 'socket.io'
-import { engine } from 'express-handlebars'
+import { engine } from 'express-handlebars' 
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import productRouter from './routes/products.routes.js'
@@ -21,17 +22,21 @@ import { ProductManager } from './controllers/ProductManager.js';
 import cartModel from './models/carts.models.js'
 import cookieParser from 'cookie-parser'
 import initializePassport from './config/passport.js'
+import config from "./config/config.js";
+import routerHandlebars from './routes/handlebars.routes.js';
 
+console.log(config)
 
 const PORT = 4000
 const app = express()
 
 
 //Server
-/* const server = app.listen(PORT, () => {
+ const server = app.listen(PORT, () => {
     console.log(`Server on port ${PORT}`)
+  
 })
-const io = new Server(server) */
+const io = new Server(server) 
 
 mongoose.connect(process.env.MONGO_URL)
     .then(() => {
@@ -54,12 +59,25 @@ mongoose.connect(process.env.MONGO_URL)
 }) */
 
 //Middlewares
+
+function auth(req, res, next) {
+    console.log(req.session.email)
+
+    if (req.session.email === "lisa@lisa.com") // && req.session.password == "Lisa") 
+    {
+        return next() //Continua con la ejecucion normal de la ruta
+    }
+
+    return res.send("No tenes acceso a este contenido")
+}
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true })) //URL extensas
-app.use(cookieParser(process.env.SIGNED_COOKIE)) //Firmo la cookie
-app.engine('handlebars', engine()) // Se va a trabajar con handlebars
-app.set('view engine', 'handlebars')
-app.set('views', path.resolve(__dirname, './views')) // ver si va el punto
+//app.use(cookieParser(process.env.JWT_SECRET)) //Firmo la cookie
+app.use(cookieParser(process.env.SIGNED_COOKIE)); // firmo la cookie para que si se modifica la cookie no la acepte
+//app.engine('handlebars', engine()) // Se va a trabajar con handlebars
+//app.set('view engine', 'handlebars')
+//app.set('views', path.resolve(__dirname, './views')) // ver si va el punto
 //const upload = multer({ storage: storage })
 //const mensajes = []
 app.use(session({
@@ -72,27 +90,25 @@ app.use(session({
     resave: true,
     saveUninitialized: true
 }))
-app.use((req, res, next) => {
+/* app.use((req, res, next) => {
     if (req.session.user) {
         const user = req.session.user;
         res.locals.welcomeMessage = `Welcome, ${user.first_name} ${user.last_name}!`;
     }
     next();
-});
+}); */
 
+app.engine('handlebars', engine()); //defino que mi motor de plantillas va a ser handlebars
+app.set('view engine', 'handlebars');
+app.set('views', path.resolve(__dirname, './views'));
+
+
+//Passport
 initializePassport()
 app.use(passport.initialize())
 app.use(passport.session())
 
-function auth(req, res, next) {
-    console.log(req.session.email)
 
-    if (req.session.email == "manyeti73@gmail.com" && req.session.password == "Lisa") {
-        return next() //Continua con la ejecucion normal de la ruta
-    }
-
-    return res.send("No tenes acceso a este contenido")
-}
 
 
 //conexion BD
@@ -105,6 +121,43 @@ function auth(req, res, next) {
  */
 
 //Conexión a Socket
+
+io.on('connection', socket => {
+	console.log('Conexión con Socket.io');
+
+	socket.on('load', async () => {
+		const data = await productModel.paginate({}, { limit: 5 });
+		socket.emit('products', data);
+	});
+
+	socket.on('loadCart', async () => {
+		const cart = await cartModel.findById(cartId).populate('products.id_prod');
+		if (cart) {
+			socket.emit('cartProducts', { products: cart.products, cid: cartId });
+		} else {
+			socket.emit('cartProducts', false);
+		}
+	});
+
+	socket.on('newProduct', async product => {
+		await productModel.create(product);
+		const products = await productModel.find();
+
+		socket.emit('products', products);
+	});
+
+	socket.on('mensaje', async info => {
+		const { email, message } = info;
+		await messageModel.create({
+			email,
+			message,
+		});
+		const messages = await messageModel.find();
+
+		socket.emit('mensajes', messages);
+	});
+});
+
 /* io.on("connection", (socket) => {
     console.log("Conexión Con Socket.io")
     socket.on('mensaje', info => {
@@ -175,119 +228,12 @@ app.use('/static', express.static(path.join(__dirname, '/public')))
 app.use('/chat', express.static(path.join(__dirname, '/public'))) //path.join() es una concatenacion de una manera mas optima que con el +
 //app.use('/static', express.static(path.join(__dirname, '/public')))
 app.use('/api/RealTimeProduct', productRouter)
+app.use('/static', routerHandlebars);
 //app.use('/', viewRouter)
 app.use('/api/messages', routerMessage);
-app.use('/api/products', productRouter)
+/* app.use('/api/products', productRouter)
 app.use('/api/carts', routerCarts)
 app.use('/api/users', userRouter);
-app.use('/api/sessions', sessionRouter)
-
+app.use('/api/sessions', sessionRouter) */
+app.use('/', router)
 //Cookies
-
-app.get('/setCookie', (req, res) => {
-    res.cookie('CookieCookie', 'Esto es el valor de una cookie', { maxAge: 60000, signed: true }).send('Cookie creada') //Cookie de un minuto firmada
-})
-
-app.get('/getCookie', (req, res) => {
-    res.send(req.signedCookies) //Consultar solo las cookies firmadas
-    //res.send(req.cookies) Consultar TODAS las cookies
-})
-
-//SESSIONS
-
-app.get('/session', (req, res) => {
-    if (req.session.counter) { //Si existe la variable counter en la asesion
-        req.session.counter++
-        res.send(`Has entrado ${req.session.counter} veces a mi pagina`)
-    } else {
-        req.session.counter = 1
-        res.send("Hola, por primera vez")
-    }
-})
-
-app.get('/login', (req, res) => {
-    const { email, password } = req.body
-
-
-    req.session.email = email
-    req.session.password = password
-
-    return res.send("Usuario logueado")
-
-})
-
-app.get('/admin', auth, (req, res) => {
-    res.send("Sos admin")
-})
-
-app.get('/logout', (req, res) => {
-    req.session.destroy((error) => {
-        if (error)
-            console.log(error)
-        else
-            res.redirect('/')
-    })
-})
-
-
-//HBS
-/* app.get('/chat', (req, res) => {
-	res.render('chat', {
-        rutaJS: 'chat',
-        rutaCSS: "style"
-    });    
-})
-
-
-app.get('/static', (req, res) => {
-	 res.render('home', {
-		rutaCSS: 'home',
-		rutaJS: 'home',
-	});
-});
-
-app.get('/static/register', async (req, res) => {
-
-    res.render('register', {
-        pathJS: 'register',
-        pathCSS: 'register'
-    })
-})
-
-app.get('/static/login', async (req, res) => {
-    res.render('login', {
-        pathJS: 'login',
-        pathCSS: 'login'
-    })
-}) 
-
-
-app.get('/static/realtimeproducts', (req, res) => {
-	res.render('realTimeProducts', {
-		rutaCSS: 'realTimeProducts',
-		rutaJS: 'realTimeProducts',
-	});
-});
-
-app.get('/static/carts/:cid', (req, res) => {
-	res.render('carts', {
-		rutaCSS: 'carts',
-		rutaJS: 'carts',
-	});
-}); */
-
-
-
-
-/* app.post('/upload', upload.single('product'), (req, res) => {
-    console.log(req.file)
-    console.log(req.body)
-    res.status(200).send("Imagen cargada")
-}) */
-
-//console.log(path.join(__dirname, '/public'))
-
-//Server
-app.listen(PORT, () => {
-    console.log(`Server on port ${PORT}`)    ///antes de socket.io
-})

@@ -1,10 +1,25 @@
 import { Router } from "express";
-import { userModel } from '../models/user.models.js'
+/* import { userModel } from '../models/user.models.js'
 import { validatePassword } from "../utils/bcrypt.js";
-import { createHash } from "../utils/bcrypt.js";
+import { createHash } from "../utils/bcrypt.js"; */
 import passport from "passport";
+import { authorization, passportError } from "../utils/messageErrors.js";
+import sessionController from '../controllers/session.controller.js';
+import { generateToken } from '../utils/jwt.js'
 
-const sessionRouter = Router({caseSensitive: false});
+const sessionRouter = Router()
+
+
+sessionRouter.post('/login', passport.authenticate('login'), sessionController.postSession);
+
+sessionRouter.get('/current', passportError('jwt'), sessionController.getCurrent);
+
+sessionRouter.get('/github', passport.authenticate('github', { scope: ['user: email'] }), sessionController.getGitHubUser);
+
+sessionRouter.get('/githubSession', passport.authenticate('github'), sessionController.getGithubSession);
+
+sessionRouter.get('/logout', sessionController.getLogout);
+//const sessionRouter = Router({caseSensitive: false});
 
 /*
 const { email, password } = req.body
@@ -30,7 +45,7 @@ const { email, password } = req.body
         res.status(400).send({ error: `Error en login: ${error}` })
     }
 */
-sessionRouter.post('/login', passport.authenticate('login'), async (req, res) => {
+/* sessionRouter.post('/login', passport.authenticate('login'), async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).send({ mensaje: "Invalidate user" })
@@ -42,10 +57,28 @@ sessionRouter.post('/login', passport.authenticate('login'), async (req, res) =>
             age: req.user.age,
             email: req.user.email
         }
-
+        const token = generateToken(req.user)
+        res.cookie('jwtCookie', token, {
+            maxAge: 43200000
+        })
         res.status(200).send({ payload: req.user })
     } catch (error) {
         res.status(500).send({ mensaje: `Error al iniciar sesion ${error}` })
+    }
+})
+
+sessionRouter.get('/current', passportError('jwt'), authorization('user'), (req,res)  => {
+    res.send(req.user)
+} )
+
+
+sessionRouter.get('/testJWT', passport.authenticate('jwt', { session: true }), async (req, res) => {
+    res.status(200).send({ mensaje: req.user })
+    req.session.user = {
+        first_name: req.user.user.first_name,
+        last_name: req.user.user.last_name,
+        age: req.user.user.age,
+        email: req.user.user.email
     }
 })
 
@@ -62,7 +95,9 @@ sessionRouter.get('/logout', (req, res) => {
     if (req.session) {
         req.session.destroy()
     }
+    console.log(req.session)
+    res.clearCookie('jwtCookie')
     res.status(200).send({ resultado: 'Login eliminado' })
-})
+}) */
 
 export default sessionRouter;
