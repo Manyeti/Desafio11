@@ -6,6 +6,8 @@ import userRouter from "./user.routes.js";
 import routerMessage from './messages.routes.js';
 import routerHandlebars from './handlebars.routes.js';
 import routerTicket from './tickets.routes.js';
+import routerMailing from './mail.routes.js';
+import routerMock from './mocks.routes.js';
 
 const router = Router()
 
@@ -16,5 +18,7 @@ router.use('/api/sessions', sessionRouter)
 router.use('/api/messages', routerMessage);
 router.use('/static', routerHandlebars);
 router.use('/api/tickets', routerTicket);
+router.use('/api/mail', routerMailing);
+router.use('/api/mockingproducts', routerMock);
 
 export default router

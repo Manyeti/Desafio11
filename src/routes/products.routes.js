@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import productsController from '../controllers/product.controller.js';
 import { authorization, passportError } from '../utils/messageErrors.js';
+import createProducts from '../controllers/mocks.controller.js';
 
 const routerProd = Router()
 

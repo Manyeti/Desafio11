@@ -1,4 +1,7 @@
 import productModel from "../models/products.models.js";
+import CustomError from '../services/errors/CustomError.js';
+import EErrors from '../services/errors/enums.js';
+import { generateProductErrorInfo } from '../services/errors/info.js';
 
 const getProducts = async (req, res) => {
     const { limit, page, category, sort } = req.query
@@ -45,44 +48,71 @@ const getProduct = async (req, res) => {
 }
 
 const postProduct = async (req, res) => {
+	const { title, description, code, price, stock, category } = req.body;
 
-    const { title, description, code, price, stock, category } = req.body
+	if ((!title, !description, !code, !price, !stock, !category)) {
+		CustomError.createError({
+			name: 'Error de creación de producto',
+			cause: generateProductErrorInfo({ title, description, code, price, stock, category }),
+			message: 'Error al crear producto',
+			code: EErrors.MISSING_OR_INVALID_PRODUCT_DATA,
+		});
+	}
 
-    try {
-        const product = await productModel.create({ title, description, code, price, stock, category })
+	try {
+		const product = await productModel.create({
+			title,
+			description,
+			code,
+			price,
+			stock,
+			category,
+		});
 
-        if (product) {
-            return res.status(201).send(product)
-        }
+		if (product) {
+			return res.status(201).send(product);
+		}
+	} catch (error) {
+		if (error.code == 11000) {
+			res.status(400).send({ error: `Llave duplicada` });
+		}
 
-        res.status(404).send({ error: "Producto no encontrado" })
-
-    } catch (error) {
-        if (error.code == 11000) {
-            return res.status(400).send({ error: `Llave duplicada` })
-        } else {
-            return res.status(500).send({ error: `Error en consultar producto ${error}` })
-        }
-
-    }
-}
+		return res.status(500).send({ error: `Error en consultar producto ${error}` });
+	}
+};
 
 const putProduct = async (req, res) => {
-    const { id } = req.params
-    const { title, description, code, price, stock, category } = req.body
-    try {
-        const product = await productModel.findByIdAndUpdate(id, { title, description, code, price, stock, category })
+	const { pid } = req.params;
+	const { title, description, code, price, stock, category } = req.body;
 
-        if (product) {
-            return res.status(200).send(product)
-        }
+	if ((!title, !description, !code, !price, !stock, !category)) {
+		CustomError.createError({
+			name: 'Error de actualización de producto',
+			cause: generateProductErrorInfo({ title, description, code, price, stock, category }),
+			message: 'Error al actualizar producto',
+			code: EErrors.MISSING_OR_INVALID_DATA,
+		});
+	}
 
-        res.status(404).send({ error: "Producto no encontrado" })
+	try {
+		const product = await productModel.findByIdAndUpdate(pid, {
+			title,
+			description,
+			code,
+			price,
+			stock,
+			category,
+		});
 
-    } catch (error) {
-        res.status(500).send({ error: `Error en actualizar producto ${error}` })
-    }
-}
+		if (product) {
+			return res.status(200).send(product);
+		}
+
+		res.status(404).send({ error: 'Producto no encontrado' });
+	} catch (error) {
+		res.status(500).send({ error: `Error en actualizar producto ${error}` });
+	}
+};
 
 const deleteProduct = async (req, res) => {
     const { id } = req.params
