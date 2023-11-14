@@ -9,6 +9,8 @@ import cartModel from '../models/carts.models.js';
 import { generateUserErrorInfo } from '../services/errors/info.js';
 import CustomError from '../services/errors/CustomError.js';
 import EErrors from '../services/errors/enums.js';
+import logger from '../utils/logger.js';
+
 
 
 
@@ -55,7 +57,8 @@ const localRegister = () => {
 				try {
 					const user = await userModel.findOne({ email: username });
 					if (user) {
-						return done('Usuario existente');
+						logger.info('User already exists')
+						return done(null, false);
 					}
 					const passwordHash = createHash(password);
 					const userCreated = await userModel.create({
@@ -66,8 +69,10 @@ const localRegister = () => {
 						password: passwordHash,
 					});
 					req.user = userCreated;
+					logger.info('User created')
 					return done(null, userCreated);
 				} catch (error) {
+					logger.error(error)
 					return done(error);
 				}
 			}
@@ -85,14 +90,17 @@ const localLogin = () => {
 				try {
 					const user = await userModel.findOne({ email: username });
 					if (!user) {
+						logger.info('User not found')
 						return done(null, false);
 					}
 					if (validatePassword(password, user.password)) {
+						logger.info('User and password are valid')
 						return done(null, user);
 					}
 
 					return done(null, false);
 				} catch (error) {
+					logger.error(error)
 					return done(error);
 				}
 			}
@@ -113,6 +121,7 @@ const githubRegister = () => {
 				try {
 					const user = await userModel.findOne({ email: profile._json.email });
 					if (user) {
+						logger.info('User already exists')
 						done(null, user);
 					} else {
 						const userCreated = await userModel.create({
@@ -122,9 +131,11 @@ const githubRegister = () => {
 							age: 18,
 							password: 'password',
 						});
+						logger.info('User created')
 						done(null, userCreated);
 					}
 				} catch (error) {
+					logger.error(error)
 					done(error);
 				}
 			}
@@ -149,6 +160,7 @@ const jwtLogin = () => {
 				try {
 					return done(null, jwt_payload);
 				} catch (error) {
+					logger.error(error)
 					return done(error);
 				}
 			}

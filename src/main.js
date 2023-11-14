@@ -24,6 +24,8 @@ import cookieParser from 'cookie-parser'
 import initializePassport from './config/passport.js'
 import config from "./config/config.js";
 import routerHandlebars from './routes/handlebars.routes.js';
+//import { addLogger } from './utils/logger.js';
+import logger from './utils/logger.js';
 
 console.log(config)
 
@@ -32,19 +34,32 @@ const app = express()
 
 
 //Server
- const server = app.listen(PORT, () => {
+/*  const server = app.listen(PORT, () => {
     console.log(`Server on port ${PORT}`)
   
-})
+}) */
+
+ const server = app.listen(PORT, () => {
+    logger.info(`Server on port ${PORT}`)
+  
+}) 
 const io = new Server(server) 
 
-mongoose.connect(process.env.MONGO_URL)
+/* mongoose.connect(process.env.MONGO_URL)
     .then(() => {
         console.log("DB conectada")
     })
     .catch((error) => {
         console.log(error)
+    }) */
+
+mongoose.connect(process.env.MONGO_URL)
+    .then(() => {
+        logger.info("DB conectada")
     })
+    .catch((error) => {
+        logger.fatal(error)
+    })	
 
 //Config
 
@@ -73,6 +88,7 @@ function auth(req, res, next) {
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true })) //URL extensas
+//app.use(addLogger);
 //app.use(cookieParser(process.env.JWT_SECRET)) //Firmo la cookie
 app.use(cookieParser(process.env.SIGNED_COOKIE)); // firmo la cookie para que si se modifica la cookie no la acepte
 //app.engine('handlebars', engine()) // Se va a trabajar con handlebars
@@ -123,7 +139,7 @@ app.use(passport.session())
 //Conexión a Socket
 
 io.on('connection', socket => {
-	console.log('Conexión con Socket.io');
+	logger.info('Conexión con Socket.io');
 
 	socket.on('load', async () => {
 		const data = await productModel.paginate({}, { limit: 5 });

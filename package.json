@@ -24,7 +24,8 @@
     "socket.io": "^4.7.2",
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "winston": "^3.11.0"
   },
   "name": "desafio3",
   "version": "1.0.0",
