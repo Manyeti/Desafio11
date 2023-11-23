@@ -36,6 +36,33 @@ const sendEmail = async (req, res) => {
 	res.send({ message: `Mail enviado`, response: resultado });
 };
 
-const mailingController = { sendEmail };
+const sendPasswordRecoveryEmail = (email, recoveryLink) => {
+	const mailOptions = {
+		from: 'testingcodersmm@gmail.com',
+		to: email,
+		subject: 'Link restauración de contraseña',
+		html: `
+      <div>
+        <h1>Tu link de recuperación</h1>
+				<p>${recoveryLink}</p>
+      </div>
+    `,
+	};
+	transporter.sendMail(mailOptions, (error, info) => {
+		if (error) {
+			logger.error(
+				`[ERROR][${new Date().tolocaleDateString()} - ${new Date().tolocaleTimeString()}] Ha ocurrido un error: ${
+					error.message
+				}`
+			);
+		} else {
+			logger.info(
+				`[INFO][${new Date().tolocaleDateString()} - ${new Date().tolocaleTimeString()}] Email enviado correctamente`
+			);
+		}
+	});
+};
+
+const mailingController = { sendEmail, sendPasswordRecoveryEmail };
 
 export default mailingController;

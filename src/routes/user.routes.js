@@ -11,6 +11,9 @@ userRouter.post('/', passport.authenticate('register'), usersController.postUser
 
 userRouter.get('/', usersController.getUser);
 
+userRouter.post('/recovery', usersController.recoveryPassword);
+
+userRouter.post('/resetpassword/:token', usersController.resetPassword);
 
 // Get users
 /* userRouter.get('/', async (req, res) => {

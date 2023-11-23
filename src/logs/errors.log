@@ -1,6 +1,3 @@
-{"level":"warning","message":"[WARNING][14-11-2023 - 19:53:07] Alerta: Cuidado, alguna te mandaste","timestamp":"2023-11-14T22:53:07.350Z"}
-{"level":"error","message":"[ERROR][14-11-2023 - 19:53:07] Ha ocurrido un error: Cuidado, alguna te mandaste","timestamp":"2023-11-14T22:53:07.352Z"}
-{"level":"fatal","message":"[ERROR FATAL][14-11-2023 - 19:53:07] Ha ocurrido un error fatal: Cuidado, alguna te mandaste","timestamp":"2023-11-14T22:53:07.354Z"}
 {"level":"warning","message":"[WARNING][14-11-2023 - 19:56:42] Alerta: Algo puede estar mal","timestamp":"2023-11-14T22:56:42.996Z"}
 {"level":"error","message":"[ERROR][14-11-2023 - 19:56:42] Error: Algo esta mal","timestamp":"2023-11-14T22:56:42.999Z"}
 {"level":"fatal","message":"[ERROR FATAL][14-11-2023 - 19:56:42] Error Fatal: Algo esta muy mal","timestamp":"2023-11-14T22:56:43.001Z"}
