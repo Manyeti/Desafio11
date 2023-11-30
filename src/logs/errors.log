@@ -4,3 +4,5 @@
 {"level":"warning","message":"[WARNING][14-11-2023 - 19:58:46] Alerta: Algo puede estar mal","timestamp":"2023-11-14T22:58:46.621Z"}
 {"level":"error","message":"[ERROR][14-11-2023 - 19:58:46] Error: Algo esta mal","timestamp":"2023-11-14T22:58:46.624Z"}
 {"level":"fatal","message":"[ERROR FATAL][14-11-2023 - 19:58:46] Error Fatal: Algo esta muy mal","timestamp":"2023-11-14T22:58:46.625Z"}
+{"code":"ETIMEOUT","hostname":"cluster0.lkgkcby.mongodb.net","level":"fatal","syscall":"queryTxt","timestamp":"2023-11-30T21:12:19.530Z"}
+{"code":"ETIMEOUT","hostname":"cluster0.lkgkcby.mongodb.net","level":"fatal","syscall":"queryTxt","timestamp":"2023-11-30T21:13:59.380Z"}
