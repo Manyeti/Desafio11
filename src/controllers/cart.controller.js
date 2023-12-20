@@ -22,6 +22,9 @@ const purchaseCart = async (req, res) => {
 					purchaseItems.push(product.title);
 				}
 			});
+			if (user.rol === 'premium') {
+				amount *= 0.9;
+			}
 			console.log(purchaseItems);
 			await cartModel.findByIdAndUpdate(cid, { products: [] });
 			res.redirect(
@@ -156,11 +159,15 @@ const getCarts = async (req, res) => {
     const { limit } = req.query;
 	try {
 		const carts = await cartModel.find().limit(limit);
-		res.status(200).send({ resultado: 'OK', message: carts });
+		if (carts) {
+			res.status(200).send({ resultado: 'OK', message: carts });
+		} else {
+			res.status(404).send({ resultado: 'Carritos no encontrados' });
+		}
 	} catch (error) {
-		res.status(400).send({ error: `Error al consultar carritos: ${error}` });
+		res.status(500).send({ error: `Error al consultar carritos: ${error}` });
 	}
-}
+};
 
 const deleteProductCart = async (req, res) => {
     const { cid, pid } = req.params

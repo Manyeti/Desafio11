@@ -68,7 +68,7 @@ const io = new Server(server)
         console.log(error)
     }) */
 
-mongoose.connect(process.env.MONGO_URL)
+await mongoose.connect(process.env.MONGO_URL)
     .then(() => {
         logger.info("DB conectada")
     })

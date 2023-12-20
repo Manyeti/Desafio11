@@ -1,4 +1,5 @@
 import { generateToken } from '../utils/jwt.js';
+import userModel from '../models/user.models.js';
 
 const postSession = async (req, res) => {
     try {
@@ -16,7 +17,7 @@ const postSession = async (req, res) => {
         res.cookie('jwtCookie', token, {
             maxAge: 43200000
         })
-        return res.redirect('../../static/products');
+        return res.status(200).send('Login exitoso');
     } catch (error) {
         res.status(500).send({ mensaje: `Error al iniciar sesion ${error}` })
     }
@@ -46,6 +47,9 @@ const getGithubSession = async (req, res) => {
     res.status(200).send({ mensaje: 'Sesión creada' });
 }
 
+const getGithubCreateUser = async (req, res) => {
+	return res.status(200).send({ mensaje: 'Usuario creado' });
+};
 
 const getLogout = async (req, res) => {
     if (req.session) {
@@ -58,6 +62,7 @@ const getLogout = async (req, res) => {
 const sessionController = {
 	postSession,
 	getCurrent,
+    getGithubCreateUser,
     getJWT,
 	getGitHubUser,
 	getGithubSession,

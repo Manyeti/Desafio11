@@ -13,12 +13,12 @@ const routerCarts = Router();
 routerCarts.get('/', cartsController.getCarts);
 routerCarts.get('/:cid', cartsController.getCart);
 routerCarts.post('/', cartsController.postCart);
-routerCarts.post('/:cid/purchase', cartsController.purchaseCart);
-routerCarts.put('/:cid/product/:pid', passportError('jwt'), authorization('user'),cartsController.putProductCart);
-routerCarts.put('/:cid/products/:pid', passportError('jwt'), authorization('user'),cartsController.putQuantityCart);
-routerCarts.put('/:cid', passportError('jwt'), authorization('user'),cartsController.putProductsCart);
-routerCarts.delete('/:cid', passportError('jwt'), authorization('user'),cartsController.deleteCart);
-routerCarts.delete('/:cid/products/:pid', passportError('jwt'), authorization('user'),cartsController.deleteProductCart);
+routerCarts.post('/:cid/purchase', passportError('jwt'), authorization(['user', 'premium']), cartsController.purchaseCart);
+routerCarts.put('/:cid/product/:pid', passportError('jwt'), authorization(['user', 'premium']),cartsController.putProductCart);
+routerCarts.put('/:cid/products/:pid', passportError('jwt'), authorization(['user', 'premium']),cartsController.putQuantityCart);
+routerCarts.put('/:cid', passportError('jwt'), authorization(['user', 'premium']),cartsController.putProductsCart);
+routerCarts.delete('/:cid', passportError('jwt'), authorization(['user', 'premium']),cartsController.deleteCart);
+routerCarts.delete('/:cid/products/:pid', passportError('jwt'), authorization(['user', 'premium']),cartsController.deleteProductCart);
 
 /* routerCarts.get('/', async (req, res) => {
 	const { limit } = req.query;

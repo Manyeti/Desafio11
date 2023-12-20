@@ -4,6 +4,7 @@ import { createHash } from "../utils/bcrypt.js";
 import passport from "passport";
 import usersController from '../controllers/user.controller.js';
 
+const upload = multer({ dest: 'documents/' });
 //const userRouter = Router({caseSensitive: false});
 const userRouter = Router()
 
@@ -14,6 +15,8 @@ userRouter.get('/', usersController.getUser);
 userRouter.post('/recovery', usersController.recoveryPassword);
 
 userRouter.post('/resetpassword/:token', usersController.resetPassword);
+
+userRouter.delete('/:uid', usersController.deleteUser);
 
 // Get users
 /* userRouter.get('/', async (req, res) => {
